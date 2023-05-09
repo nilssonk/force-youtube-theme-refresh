@@ -76,24 +76,30 @@ const player_hook = (details) => {
 
   do_log("Player hook: " + details.originUrl + " => " + details.url);
 
-  // Extract video ID from JSON payload
+  // Extract JSON payload
   const raw = details.requestBody.raw[0].bytes;
   const data = new Uint8Array(raw);
   const enc = new TextDecoder("utf-8");
   const request = JSON.parse(enc.decode(data));
   do_log(request);
 
+  const context = request["playbackContext"]["contentPlaybackContext"];
+  const video_id = request["videoId"];
+
+  // Don't redirect on hover preview
+  if (context["autonav"]) {
+    do_log("Detected hover preview, skipping");
+    return;
+  }
+
   // Don't redirect channel page inline player to watch URL
-  const referer = new URL(
-    request["playbackContext"]["contentPlaybackContext"]["referer"]
-  );
+  const referer = new URL(context["referer"]);
   if (referer.pathname.startsWith("/@")) {
     do_log(`Referer (${referer.href}) is channel page, skipping`);
     return;
   }
 
   // Redirect the requesting tab to the proper watch URL
-  const video_id = request["videoId"];
   const params = new URLSearchParams(details.search);
   params.append("v", video_id);
   params.append("themeRefresh", "1");
