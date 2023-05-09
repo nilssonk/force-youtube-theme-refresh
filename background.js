@@ -22,16 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+let do_log = (_) => {};
+
+browser.management.getSelf().then((info) => {
+  if (info.installType == "development") {
+    do_log = console.log;
+  }
+});
+
 const watch_urls = ["*://*.youtube.com/watch?*"];
 const player_urls = ["*://*.youtube.com/*/player?*"];
 
 const watch_hook = (details) => {
-  if (details.type != "main_frame") {
+  if (details.type != "main_frame" || details.method != "GET") {
     return;
   }
 
+  do_log("Watch hook: " + details.originUrl + " => " + details.url);
+
   // Prevent back-and-forth URL rewriting
   if (sessionStorage.getItem(details.requestId)) {
+    do_log("Page already seen before, skipping");
     return;
   }
   sessionStorage.setItem(details.requestId, true);
@@ -40,6 +51,7 @@ const watch_hook = (details) => {
   const new_url = new URL(details.url);
   const params = new URLSearchParams(new_url.search);
   if (params.has("themeRefresh")) {
+    do_log("URL already has themeRefresh, skipping");
     return;
   }
 
@@ -66,12 +78,22 @@ const player_hook = (details) => {
   const raw = details.requestBody.raw[0].bytes;
   const data = new Uint8Array(raw);
   const enc = new TextDecoder("utf-8");
-  const video_id = JSON.parse(enc.decode(data))["videoId"];
+  const request = JSON.parse(enc.decode(data));
+
+  // Don't redirect channel pages inline player to watch URL
+  const original_url = new URL(request["context"]["client"]["originalUrl"]);
+  do_log(original_url);
+  if (original_url.pathname.startsWith("/@")) {
+    do_log("Original URL was channel page, skipping");
+    return;
+  }
 
   // Redirect the requesting tab to the proper URL
   const redirect_url = new URL(details.url);
+  const video_id = request["videoId"];
   redirect_url.pathname = "/watch";
   redirect_url.search = `?v=${video_id}`;
+
   browser.tabs.update(details.tabId, {
     url: redirect_url.href,
   });
