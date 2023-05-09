@@ -74,25 +74,32 @@ const player_hook = (details) => {
     return;
   }
 
+  do_log("Player hook: " + details.originUrl + " => " + details.url);
+
   // Extract video ID from JSON payload
   const raw = details.requestBody.raw[0].bytes;
   const data = new Uint8Array(raw);
   const enc = new TextDecoder("utf-8");
   const request = JSON.parse(enc.decode(data));
+  do_log(request);
 
-  // Don't redirect channel pages inline player to watch URL
-  const original_url = new URL(request["context"]["client"]["originalUrl"]);
-  do_log(original_url);
-  if (original_url.pathname.startsWith("/@")) {
-    do_log("Original URL was channel page, skipping");
+  // Don't redirect channel page inline player to watch URL
+  const referer = new URL(
+    request["playbackContext"]["contentPlaybackContext"]["referer"]
+  );
+  if (referer.pathname.startsWith("/@")) {
+    do_log(`Referer (${referer.href}) is channel page, skipping`);
     return;
   }
 
-  // Redirect the requesting tab to the proper URL
-  const redirect_url = new URL(details.url);
+  // Redirect the requesting tab to the proper watch URL
   const video_id = request["videoId"];
+  const params = new URLSearchParams(details.search);
+  params.append("v", video_id);
+  params.append("themeRefresh", "1");
+  const redirect_url = new URL(details.url);
   redirect_url.pathname = "/watch";
-  redirect_url.search = `?v=${video_id}`;
+  redirect_url.search = params;
 
   browser.tabs.update(details.tabId, {
     url: redirect_url.href,
