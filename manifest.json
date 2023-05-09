@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Force Youtube Theme Refresh",
-  "version": "1.0",
+  "version": "1.0.1",
   "description": "Forces the Youtube theme refresh for most Youtube pages",
   "permissions": [
     "storage",
