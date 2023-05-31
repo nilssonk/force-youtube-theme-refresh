@@ -92,11 +92,15 @@ const player_hook = (details) => {
     return;
   }
 
-  // Don't redirect channel page inline player to watch URL
+
+  // Skip certain pages by matching against referer prefix
   const referer = new URL(context["referer"]);
-  if (referer.pathname.startsWith("/@")) {
-    do_log(`Referer (${referer.href}) is channel page, skipping`);
-    return;
+  const skipped_prefixes = [["watch", "/watch"], ["channel", "/@"]];
+  for (let [name, prefix] of skipped_prefixes) {
+    if (referer.pathname.startsWith(prefix)) {
+      do_log(`Referer (${referer.href}) is ${name} page, skipping`);
+      return;
+    }
   }
 
   // Redirect the requesting tab to the proper watch URL
