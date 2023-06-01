@@ -95,6 +95,7 @@ const player_hook = (details) => {
   // Skip certain pages by matching against referer prefix
   const referer = new URL(context["referer"]);
   const skipped_prefixes = [
+    ["embed", "/embed"],
     ["watch", "/watch"],
     ["channel", "/@"],
   ];
