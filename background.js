@@ -92,11 +92,13 @@ const player_hook = (details) => {
     return;
   }
 
-
   // Skip certain pages by matching against referer prefix
   const referer = new URL(context["referer"]);
-  const skipped_prefixes = [["watch", "/watch"], ["channel", "/@"]];
-  for (let [name, prefix] of skipped_prefixes) {
+  const skipped_prefixes = [
+    ["watch", "/watch"],
+    ["channel", "/@"],
+  ];
+  for (const [name, prefix] of skipped_prefixes) {
     if (referer.pathname.startsWith(prefix)) {
       do_log(`Referer (${referer.href}) is ${name} page, skipping`);
       return;
