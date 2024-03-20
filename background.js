@@ -86,6 +86,12 @@ const player_hook = (details) => {
   const context = request["playbackContext"]["contentPlaybackContext"];
   const video_id = request["videoId"];
 
+  // Autoplay is probably always bad
+  if (context["autoplay"]) {
+    do_log("Detected autoplay, skipping");
+    return;
+  }
+
   // Don't redirect on hover preview
   if (context["autonav"]) {
     do_log("Detected hover preview, skipping");
