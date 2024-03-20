@@ -115,6 +115,12 @@ const player_hook = (details) => {
 
   // Redirect the requesting tab to the proper watch URL
   const params = new URLSearchParams(details.search);
+
+  if (params.has("themeRefresh")) {
+    do_log("URL already has themeRefresh, skipping");
+    return;
+  }
+
   params.append("v", video_id);
   if (playlist_id) {
     params.append("list", playlist_id);
