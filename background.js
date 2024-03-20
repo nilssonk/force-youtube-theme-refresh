@@ -85,6 +85,7 @@ const player_hook = (details) => {
 
   const context = request["playbackContext"]["contentPlaybackContext"];
   const video_id = request["videoId"];
+  const playlist_id = request["playlistId"];
 
   // Autoplay is probably always bad
   if (context["autoplay"]) {
@@ -115,6 +116,9 @@ const player_hook = (details) => {
   // Redirect the requesting tab to the proper watch URL
   const params = new URLSearchParams(details.search);
   params.append("v", video_id);
+  if (playlist_id) {
+    params.append("list", playlist_id);
+  }
   params.append("themeRefresh", "1");
   const redirect_url = new URL(details.url);
   redirect_url.pathname = "/watch";
